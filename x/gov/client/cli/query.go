@@ -1,9 +1,11 @@
 package cli
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/spf13/cobra"
 
@@ -232,8 +234,11 @@ $ %s query gov vote 1 cosmos1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk
 
 			vote := res.GetVote()
 			if vote.Empty() {
+				ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+				defer cancel()
+
 				params := v1.NewQueryVoteParams(proposalID, voterAddr)
-				resByTxQuery, err := gcutils.QueryVoteByTxQuery(clientCtx, params)
+				resByTxQuery, err := gcutils.QueryVoteByTxQuery(ctx, clientCtx, params)
 				if err != nil {
 					return err
 				}
@@ -296,8 +301,11 @@ $ %[1]s query gov votes 1 --page=2 --limit=100
 				page, _ := cmd.Flags().GetInt(flags.FlagPage)
 				limit, _ := cmd.Flags().GetInt(flags.FlagLimit)
 
+				ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+				defer cancel()
+
 				params := v1.NewQueryProposalVotesParams(proposalID, page, limit)
-				resByTxQuery, err := gcutils.QueryVotesByTxQuery(clientCtx, params)
+				resByTxQuery, err := gcutils.QueryVotesByTxQuery(ctx, clientCtx, params)
 				if err != nil {
 					return err
 				}
@@ -639,7 +647,10 @@ $ %s query gov proposer 1
 				return fmt.Errorf("proposal-id %s is not a valid uint", args[0])
 			}
 
-			prop, err := gcutils.QueryProposerByTxQuery(clientCtx, proposalID)
+			ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+			defer cancel()
+
+			prop, err := gcutils.QueryProposerByTxQuery(ctx, clientCtx, proposalID)
 			if err != nil {
 				return err
 			}

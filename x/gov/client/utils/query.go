@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -36,7 +37,7 @@ func (p Proposer) String() string {
 // QueryVotesByTxQuery will query for votes via a direct txs tags query. It
 // will fetch and build votes directly from the returned txs and returns a JSON
 // marshalled result or any error that occurred.
-func QueryVotesByTxQuery(clientCtx client.Context, params v1.QueryProposalVotesParams) ([]byte, error) {
+func QueryVotesByTxQuery(ctx context.Context, clientCtx client.Context, params v1.QueryProposalVotesParams) ([]byte, error) {
 	var (
 		votes      []*v1.Vote
 		nextTxPage = defaultPage
@@ -47,7 +48,7 @@ func QueryVotesByTxQuery(clientCtx client.Context, params v1.QueryProposalVotesP
 	for len(votes) < totalLimit {
 		// Search for both (legacy) votes and weighted votes.
 		q := fmt.Sprintf("%s.%s='%d'", types.EventTypeProposalVote, types.AttributeKeyProposalID, params.ProposalID)
-		searchResult, err := authtx.QueryTxsByEvents(clientCtx, []string{q}, nextTxPage, defaultLimit, "")
+		searchResult, err := authtx.QueryTxsByEvents(ctx, clientCtx, []string{q}, nextTxPage, defaultLimit, "")
 		if err != nil {
 			return nil, err
 		}
@@ -105,11 +106,11 @@ func QueryVotesByTxQuery(clientCtx client.Context, params v1.QueryProposalVotesP
 }
 
 // QueryVoteByTxQuery will query for a single vote via a direct txs tags query.
-func QueryVoteByTxQuery(clientCtx client.Context, params v1.QueryVoteParams) ([]byte, error) {
+func QueryVoteByTxQuery(ctx context.Context, clientCtx client.Context, params v1.QueryVoteParams) ([]byte, error) {
 	q1 := fmt.Sprintf("%s.%s='%d'", types.EventTypeProposalVote, types.AttributeKeyProposalID, params.ProposalID)
 	q2 := fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeySender, params.Voter.String())
 	q3 := fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeySender, params.Voter)
-	searchResult, err := authtx.QueryTxsByEvents(clientCtx, []string{fmt.Sprintf("%s AND (%s OR %s)", q1, q2, q3)}, defaultPage, defaultLimit, "")
+	searchResult, err := authtx.QueryTxsByEvents(ctx, clientCtx, []string{fmt.Sprintf("%s AND (%s OR %s)", q1, q2, q3)}, defaultPage, defaultLimit, "")
 	if err != nil {
 		return nil, err
 	}
@@ -161,9 +162,9 @@ func QueryVoteByTxQuery(clientCtx client.Context, params v1.QueryVoteParams) ([]
 }
 
 // QueryProposerByTxQuery will query for a proposer of a governance proposal by ID.
-func QueryProposerByTxQuery(clientCtx client.Context, proposalID uint64) (Proposer, error) {
+func QueryProposerByTxQuery(ctx context.Context, clientCtx client.Context, proposalID uint64) (Proposer, error) {
 	q := fmt.Sprintf("%s.%s='%d'", types.EventTypeSubmitProposal, types.AttributeKeyProposalID, proposalID)
-	searchResult, err := authtx.QueryTxsByEvents(clientCtx, []string{q}, defaultPage, defaultLimit, "")
+	searchResult, err := authtx.QueryTxsByEvents(ctx, clientCtx, []string{q}, defaultPage, defaultLimit, "")
 	if err != nil {
 		return Proposer{}, err
 	}

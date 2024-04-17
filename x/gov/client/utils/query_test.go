@@ -3,6 +3,7 @@ package utils_test
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/cometbft/cometbft/rpc/client/mock"
 	coretypes "github.com/cometbft/cometbft/rpc/core/types"
@@ -158,8 +159,11 @@ func TestGetPaginatedVotes(t *testing.T) {
 				marshalled[i] = tx
 			}
 
+			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+			defer cancel()
+
 			params := v1.NewQueryProposalVotesParams(0, tc.page, tc.limit)
-			votesData, err := utils.QueryVotesByTxQuery(clientCtx, params)
+			votesData, err := utils.QueryVotesByTxQuery(ctx, clientCtx, params)
 			require.NoError(t, err)
 			votes := []v1.Vote{}
 			require.NoError(t, clientCtx.LegacyAmino.UnmarshalJSON(votesData, &votes))

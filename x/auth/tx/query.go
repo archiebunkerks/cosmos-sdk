@@ -21,7 +21,7 @@ import (
 // concatenated with an 'AND' operand. It returns a slice of Info object
 // containing txs and metadata. An error is returned if the query fails.
 // If an empty string is provided it will order txs by asc
-func QueryTxsByEvents(clientCtx client.Context, events []string, page, limit int, orderBy string) (*sdk.SearchTxsResult, error) {
+func QueryTxsByEvents(ctx context.Context, clientCtx client.Context, events []string, page, limit int, orderBy string) (*sdk.SearchTxsResult, error) {
 	if len(events) == 0 {
 		return nil, errors.New("must declare at least one event to search")
 	}
@@ -44,7 +44,7 @@ func QueryTxsByEvents(clientCtx client.Context, events []string, page, limit int
 
 	// TODO: this may not always need to be proven
 	// https://github.com/cosmos/cosmos-sdk/issues/6807
-	resTxs, err := node.TxSearch(context.Background(), query, true, &page, &limit, orderBy)
+	resTxs, err := node.TxSearch(ctx, query, true, &page, &limit, orderBy)
 	if err != nil {
 		return nil, err
 	}
